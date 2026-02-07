@@ -1,0 +1,408 @@
+---
+config:
+  layout: elk
+---
+erDiagram
+  direction LR
+
+  USERS {
+    uuid id PK ""
+    string full_name ""
+    string email UK ""
+    string phone UK ""
+    string role "CUSTOMER | LESSOR"
+    string status "ACTIVE | SUSPENDED"
+    datetime created_at ""
+    datetime updated_at ""
+  }
+
+  USER_CREDENTIALS {
+    uuid user_id PK, FK ""
+    string password_hash ""
+    datetime last_login_at ""
+    datetime password_changed_at ""
+  }
+
+  DEALERS {
+    uuid id PK ""
+    string name ""
+    string phone ""
+    string address_text ""
+    decimal latitude ""
+    decimal longitude ""
+    string status "ACTIVE | INACTIVE"
+    datetime created_at ""
+    datetime updated_at ""
+  }
+
+  MOTOR_CATEGORIES {
+    uuid id PK ""
+    string name "Matics | Classics | Sports | etc"
+    int sort_order ""
+    string status "ACTIVE | INACTIVE"
+  }
+
+  MOTOR_MODELS {
+    uuid id PK ""
+    uuid category_id FK ""
+    string brand ""
+    string model_name ""
+    string description ""
+    string status "ACTIVE | INACTIVE"
+    datetime created_at ""
+    datetime updated_at ""
+  }
+
+  MOTOR_VARIANTS {
+    uuid id PK ""
+    uuid motor_model_id FK ""
+    string variant_name ""
+    string color ""
+    decimal otr_price ""
+    int production_year ""
+    string status "ACTIVE | INACTIVE"
+    datetime created_at ""
+    datetime updated_at ""
+  }
+
+  MOTOR_FEATURES {
+    uuid id PK ""
+    string feature_name ""
+    string feature_group "Engine | Safety | Tech | etc"
+    string status "ACTIVE | INACTIVE"
+  }
+
+  VARIANT_FEATURES {
+    uuid id PK ""
+    uuid motor_variant_id FK ""
+    uuid feature_id FK ""
+  }
+
+  MODEL_IMAGES {
+    uuid id PK ""
+    uuid motor_model_id FK ""
+    string image_url ""
+    string caption ""
+    int sort_order ""
+    datetime created_at ""
+  }
+
+  VARIANT_IMAGES {
+    uuid id PK ""
+    uuid motor_variant_id FK ""
+    string image_url ""
+    string caption ""
+    int sort_order ""
+    datetime created_at ""
+  }
+
+  PROMOTIONS {
+    uuid id PK ""
+    string promo_name ""
+    string promo_type "DISCOUNT | CASHBACK | BONUS"
+    decimal discount_amount ""
+    decimal discount_percent ""
+    datetime start_at ""
+    datetime end_at ""
+    string terms ""
+    string status "ACTIVE | INACTIVE"
+    datetime created_at ""
+    datetime updated_at ""
+  }
+
+  PROMOTION_VARIANTS {
+    uuid id PK ""
+    uuid promotion_id FK ""
+    uuid motor_variant_id FK ""
+  }
+
+  PROMOTION_DEALERS {
+    uuid id PK ""
+    uuid promotion_id FK ""
+    uuid dealer_id FK ""
+  }
+
+  ORDERS {
+    uuid id PK ""
+    string order_no UK ""
+    uuid customer_id FK ""
+    uuid dealer_id FK ""
+    uuid lessor_user_id FK ""
+    string status "DRAFT | SUBMITTED | IN_REVIEW | PARTIAL_APPROVED | APPROVED | PARTIAL_READY | READY | PARTIAL_DELIVERED | COMPLETED | CANCELED"
+    string contact_name ""
+    string contact_phone ""
+    string address_text ""
+    decimal latitude ""
+    decimal longitude ""
+    decimal locked_otr_total ""
+    decimal promo_total ""
+    decimal grand_total ""
+    datetime created_at ""
+    datetime updated_at ""
+  }
+
+  ORDER_ITEMS {
+    uuid id PK ""
+    uuid order_id FK ""
+    uuid motor_variant_id FK ""
+    int quantity ""
+    decimal locked_otr_price ""
+    decimal line_total ""
+    decimal promo_total ""
+    decimal grand_total ""
+  }
+
+  ORDER_UNITS {
+    uuid id PK ""
+    uuid order_item_id FK ""
+    int unit_no ""
+    string unit_status "REQUESTED | APPROVED | CONTRACTED | PAID | PO_ISSUED | READY | DELIVERED | COMPLETED | CANCELED"
+    string vin ""
+    string engine_no ""
+    datetime created_at ""
+    datetime updated_at ""
+  }
+
+  ORDER_PROMOTIONS {
+    uuid id PK ""
+    uuid order_item_id FK ""
+    uuid promotion_id FK ""
+    decimal applied_amount ""
+    datetime applied_at ""
+  }
+
+  CREDIT_SIMULATIONS {
+    uuid id PK ""
+    uuid order_item_id FK ""
+    decimal dp_amount ""
+    int tenor_month ""
+    decimal monthly_installment ""
+    decimal interest_rate ""
+    boolean is_selected ""
+    datetime created_at ""
+  }
+
+  LEASING_APPLICATIONS {
+    uuid id PK ""
+    uuid order_unit_id FK, UK ""
+    uuid customer_id FK ""
+    uuid lessor_user_id FK ""
+    string status "SUBMITTED | AUTO_PREAPPROVED | MANUAL_REVIEW | SURVEY | FINAL_APPROVED | FINAL_REJECTED"
+    boolean manual_review_required ""
+    datetime submitted_at ""
+    datetime updated_at ""
+  }
+
+  APPLICATION_DOCUMENTS {
+    uuid id PK ""
+    uuid application_id FK ""
+    string doc_type "KTP | KK | SLIP_GAJI | NPWP | LAINNYA"
+    string file_url ""
+    string status "UPLOADED | VERIFIED | REJECTED"
+    uuid verified_by_user_id FK ""
+    datetime verified_at ""
+    datetime created_at ""
+  }
+
+  SCORING_CHECKS {
+    uuid id PK ""
+    uuid application_id FK ""
+    string check_type "SLIK_OJK | DUPLICATE_DATA | DSR"
+    string result "PASS | FAIL | NEED_REVIEW"
+    decimal score_value ""
+    string notes ""
+    datetime checked_at ""
+  }
+
+  APPROVALS {
+    uuid id PK ""
+    uuid application_id FK ""
+    string stage "PRE_APPROVAL | FINAL_APPROVAL"
+    string decision "APPROVE | REJECT | NEED_MORE"
+    string notes ""
+    uuid decided_by_user_id FK ""
+    datetime decided_at ""
+  }
+
+  SURVEYS {
+    uuid id PK ""
+    uuid application_id FK ""
+    datetime scheduled_at ""
+    datetime visited_at ""
+    string result "OK | NOT_OK | NEED_MORE"
+    string notes ""
+    string surveyor_name ""
+    datetime created_at ""
+  }
+
+  CONTRACTS {
+    uuid id PK ""
+    uuid order_unit_id FK, UK ""
+    uuid customer_id FK ""
+    uuid dealer_id FK ""
+    uuid lessor_user_id FK ""
+    datetime signed_at ""
+    string contract_no ""
+    string contract_file_url ""
+    string insurance_policy_no ""
+    string insurance_file_url ""
+    datetime created_at ""
+    datetime updated_at ""
+  }
+
+  PAYMENTS {
+    uuid id PK ""
+    uuid order_unit_id FK ""
+    uuid payer_user_id FK ""
+    string payment_type "DP | ADMIN | INSURANCE"
+    decimal amount ""
+    string method "CASH | TRANSFER | VA | QRIS"
+    string status "PENDING | PAID | FAILED | REFUNDED"
+    string reference_no ""
+    datetime paid_at ""
+    datetime created_at ""
+  }
+
+  PURCHASE_ORDERS {
+    uuid id PK ""
+    uuid order_unit_id FK, UK ""
+    uuid dealer_id FK ""
+    uuid lessor_user_id FK ""
+    string po_no ""
+    string status "ISSUED | CONFIRMED | CANCELED"
+    datetime issued_at ""
+    datetime confirmed_at ""
+  }
+
+  STOCK_FULFILLMENT {
+    uuid id PK ""
+    uuid order_unit_id FK, UK ""
+    string stock_status "READY | INDENT"
+    string atpm_order_no ""
+    int indent_weeks_min ""
+    int indent_weeks_max ""
+    datetime ready_at ""
+    datetime created_at ""
+  }
+
+  DELIVERIES {
+    uuid id PK ""
+    uuid order_unit_id FK ""
+    datetime scheduled_at ""
+    datetime shipped_at ""
+    datetime delivered_at ""
+    string status "SCHEDULED | SHIPPED | DELIVERED | FAILED"
+    string receiver_name ""
+    string receiver_phone ""
+    string address_text ""
+    decimal latitude ""
+    decimal longitude ""
+    uuid updated_by_user_id FK ""
+    datetime updated_at ""
+  }
+
+  DELIVERY_EVIDENCE {
+    uuid id PK ""
+    uuid delivery_id FK ""
+    string evidence_type "PHOTO | SIGNATURE | OTHER"
+    string file_url ""
+    uuid uploaded_by_user_id FK ""
+    datetime uploaded_at ""
+  }
+
+  DOCUMENT_HANDOVERS {
+    uuid id PK ""
+    uuid order_unit_id FK ""
+    string doc_type "STNK_TEMP | STNK | BPKB"
+    string status "PENDING | HANDED_OVER"
+    datetime handed_over_at ""
+    string notes ""
+    uuid handed_over_by_user_id FK ""
+  }
+
+  ORDER_STATUS_HISTORY {
+    uuid id PK ""
+    uuid order_id FK ""
+    string from_status ""
+    string to_status ""
+    string notes ""
+    uuid changed_by_user_id FK ""
+    datetime changed_at ""
+  }
+
+  ORDER_UNIT_STATUS_HISTORY {
+    uuid id PK ""
+    uuid order_unit_id FK ""
+    string from_status ""
+    string to_status ""
+    string notes ""
+    uuid changed_by_user_id FK ""
+    datetime changed_at ""
+  }
+
+  USERS ||--|| USER_CREDENTIALS : "has"
+
+  MOTOR_CATEGORIES ||--o{ MOTOR_MODELS : "groups"
+  MOTOR_MODELS ||--o{ MOTOR_VARIANTS : "has"
+
+  MOTOR_VARIANTS ||--o{ VARIANT_FEATURES : "maps"
+  MOTOR_FEATURES ||--o{ VARIANT_FEATURES : "maps"
+
+  MOTOR_MODELS ||--o{ MODEL_IMAGES : "gallery"
+  MOTOR_VARIANTS ||--o{ VARIANT_IMAGES : "gallery"
+
+  PROMOTIONS ||--o{ PROMOTION_VARIANTS : "eligible"
+  MOTOR_VARIANTS ||--o{ PROMOTION_VARIANTS : "eligible"
+
+  PROMOTIONS ||--o{ PROMOTION_DEALERS : "eligible"
+  DEALERS ||--o{ PROMOTION_DEALERS : "eligible"
+
+  USERS ||--o{ ORDERS : "places (customer)"
+  DEALERS ||--o{ ORDERS : "handles (dealer)"
+  USERS ||--o{ ORDERS : "finances (lessor)"
+
+  ORDERS ||--o{ ORDER_ITEMS : "contains"
+  MOTOR_VARIANTS ||--o{ ORDER_ITEMS : "ordered"
+  ORDER_ITEMS ||--|{ ORDER_UNITS : "expands_to_units"
+
+  ORDER_ITEMS ||--o{ ORDER_PROMOTIONS : "uses"
+  PROMOTIONS ||--o{ ORDER_PROMOTIONS : "applied"
+
+  ORDER_ITEMS ||--o{ CREDIT_SIMULATIONS : "simulates"
+
+  ORDER_UNITS ||--o| LEASING_APPLICATIONS : "becomes"
+  USERS ||--o{ LEASING_APPLICATIONS : "applies (customer)"
+  USERS ||--o{ LEASING_APPLICATIONS : "reviews (lessor)"
+  LEASING_APPLICATIONS ||--o{ APPLICATION_DOCUMENTS : "uploads"
+  USERS ||--o{ APPLICATION_DOCUMENTS : "verifies"
+  LEASING_APPLICATIONS ||--o{ SCORING_CHECKS : "checked"
+  LEASING_APPLICATIONS ||--o{ APPROVALS : "decided"
+  USERS ||--o{ APPROVALS : "decides"
+  LEASING_APPLICATIONS ||--o{ SURVEYS : "surveyed"
+
+  ORDER_UNITS ||--o| CONTRACTS : "signed"
+  USERS ||--o{ CONTRACTS : "signed_by (customer)"
+  DEALERS ||--o{ CONTRACTS : "provided_by (dealer)"
+  USERS ||--o{ CONTRACTS : "signed_by (lessor)"
+
+  ORDER_UNITS ||--o{ PAYMENTS : "paid"
+  USERS ||--o{ PAYMENTS : "pays"
+
+  ORDER_UNITS ||--o| PURCHASE_ORDERS : "PO"
+  DEALERS ||--o{ PURCHASE_ORDERS : "receives"
+  USERS ||--o{ PURCHASE_ORDERS : "issues"
+  ORDER_UNITS ||--o| STOCK_FULFILLMENT : "stock/indent"
+
+  ORDER_UNITS ||--o{ DELIVERIES : "delivered"
+  USERS ||--o{ DELIVERIES : "updates"
+  DELIVERIES ||--o{ DELIVERY_EVIDENCE : "evidence"
+  USERS ||--o{ DELIVERY_EVIDENCE : "uploads"
+
+  ORDER_UNITS ||--o{ DOCUMENT_HANDOVERS : "documents"
+  USERS ||--o{ DOCUMENT_HANDOVERS : "hands_over"
+
+  ORDERS ||--o{ ORDER_STATUS_HISTORY : "history"
+  USERS ||--o{ ORDER_STATUS_HISTORY : "changes"
+
+  ORDER_UNITS ||--o{ ORDER_UNIT_STATUS_HISTORY : "history"
+  USERS ||--o{ ORDER_UNIT_STATUS_HISTORY : "changes"
