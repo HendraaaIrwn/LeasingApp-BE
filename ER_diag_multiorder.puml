@@ -1,0 +1,449 @@
+@startuml
+hide circle
+skinparam linetype ortho
+skinparam entityStyle rectangle
+
+' =========================
+' ENTITIES
+' =========================
+entity "USERS" as USERS {
+  * id : uuid <<PK>>
+  --
+  full_name : string
+  email : string <<UK>>
+  phone : string <<UK>>
+  role : string  ' CUSTOMER | LESSOR
+  status : string ' ACTIVE | SUSPENDED
+  created_at : datetime
+  updated_at : datetime
+}
+
+entity "USER_CREDENTIALS" as USER_CREDENTIALS {
+  * user_id : uuid <<PK,FK>>
+  --
+  password_hash : string
+  last_login_at : datetime
+  password_changed_at : datetime
+}
+
+entity "DEALERS" as DEALERS {
+  * id : uuid <<PK>>
+  --
+  name : string
+  phone : string
+  address_text : string
+  latitude : decimal
+  longitude : decimal
+  status : string ' ACTIVE | INACTIVE
+  created_at : datetime
+  updated_at : datetime
+}
+
+entity "MOTOR_CATEGORIES" as MOTOR_CATEGORIES {
+  * id : uuid <<PK>>
+  --
+  name : string  ' Matics | Classics | Sports | etc
+  sort_order : int
+  status : string ' ACTIVE | INACTIVE
+}
+
+entity "MOTOR_MODELS" as MOTOR_MODELS {
+  * id : uuid <<PK>>
+  --
+  category_id : uuid <<FK>>
+  brand : string
+  model_name : string
+  description : string
+  status : string ' ACTIVE | INACTIVE
+  created_at : datetime
+  updated_at : datetime
+}
+
+entity "MOTOR_VARIANTS" as MOTOR_VARIANTS {
+  * id : uuid <<PK>>
+  --
+  motor_model_id : uuid <<FK>>
+  variant_name : string
+  color : string
+  otr_price : decimal
+  production_year : int
+  status : string ' ACTIVE | INACTIVE
+  created_at : datetime
+  updated_at : datetime
+}
+
+entity "MOTOR_FEATURES" as MOTOR_FEATURES {
+  * id : uuid <<PK>>
+  --
+  feature_name : string
+  feature_group : string  ' Engine | Safety | Tech | etc
+  status : string ' ACTIVE | INACTIVE
+}
+
+entity "VARIANT_FEATURES" as VARIANT_FEATURES {
+  * id : uuid <<PK>>
+  --
+  motor_variant_id : uuid <<FK>>
+  feature_id : uuid <<FK>>
+}
+
+entity "MODEL_IMAGES" as MODEL_IMAGES {
+  * id : uuid <<PK>>
+  --
+  motor_model_id : uuid <<FK>>
+  image_url : string
+  caption : string
+  sort_order : int
+  created_at : datetime
+}
+
+entity "VARIANT_IMAGES" as VARIANT_IMAGES {
+  * id : uuid <<PK>>
+  --
+  motor_variant_id : uuid <<FK>>
+  image_url : string
+  caption : string
+  sort_order : int
+  created_at : datetime
+}
+
+entity "PROMOTIONS" as PROMOTIONS {
+  * id : uuid <<PK>>
+  --
+  promo_name : string
+  promo_type : string ' DISCOUNT | CASHBACK | BONUS
+  discount_amount : decimal
+  discount_percent : decimal
+  start_at : datetime
+  end_at : datetime
+  terms : string
+  status : string ' ACTIVE | INACTIVE
+  created_at : datetime
+  updated_at : datetime
+}
+
+entity "PROMOTION_VARIANTS" as PROMOTION_VARIANTS {
+  * id : uuid <<PK>>
+  --
+  promotion_id : uuid <<FK>>
+  motor_variant_id : uuid <<FK>>
+}
+
+entity "PROMOTION_DEALERS" as PROMOTION_DEALERS {
+  * id : uuid <<PK>>
+  --
+  promotion_id : uuid <<FK>>
+  dealer_id : uuid <<FK>>
+}
+
+entity "ORDERS" as ORDERS {
+  * id : uuid <<PK>>
+  --
+  order_no : string <<UK>>
+  customer_id : uuid <<FK>>
+  dealer_id : uuid <<FK>>
+  lessor_user_id : uuid <<FK>>
+  status : string  ' DRAFT | SUBMITTED | IN_REVIEW | ... | CANCELED
+  contact_name : string
+  contact_phone : string
+  address_text : string
+  latitude : decimal
+  longitude : decimal
+  locked_otr_total : decimal
+  promo_total : decimal
+  grand_total : decimal
+  created_at : datetime
+  updated_at : datetime
+}
+
+entity "ORDER_ITEMS" as ORDER_ITEMS {
+  * id : uuid <<PK>>
+  --
+  order_id : uuid <<FK>>
+  motor_variant_id : uuid <<FK>>
+  quantity : int
+  locked_otr_price : decimal
+  line_total : decimal
+  promo_total : decimal
+  grand_total : decimal
+}
+
+entity "ORDER_UNITS" as ORDER_UNITS {
+  * id : uuid <<PK>>
+  --
+  order_item_id : uuid <<FK>>
+  unit_no : int
+  unit_status : string ' REQUESTED | APPROVED | ... | CANCELED
+  vin : string
+  engine_no : string
+  created_at : datetime
+  updated_at : datetime
+}
+
+entity "ORDER_PROMOTIONS" as ORDER_PROMOTIONS {
+  * id : uuid <<PK>>
+  --
+  order_item_id : uuid <<FK>>
+  promotion_id : uuid <<FK>>
+  applied_amount : decimal
+  applied_at : datetime
+}
+
+entity "CREDIT_SIMULATIONS" as CREDIT_SIMULATIONS {
+  * id : uuid <<PK>>
+  --
+  order_item_id : uuid <<FK>>
+  dp_amount : decimal
+  tenor_month : int
+  monthly_installment : decimal
+  interest_rate : decimal
+  is_selected : boolean
+  created_at : datetime
+}
+
+entity "LEASING_APPLICATIONS" as LEASING_APPLICATIONS {
+  * id : uuid <<PK>>
+  --
+  order_unit_id : uuid <<FK,UK>>
+  customer_id : uuid <<FK>>
+  lessor_user_id : uuid <<FK>>
+  status : string ' SUBMITTED | AUTO_PREAPPROVED | ... | FINAL_REJECTED
+  manual_review_required : boolean
+  submitted_at : datetime
+  updated_at : datetime
+}
+
+entity "APPLICATION_DOCUMENTS" as APPLICATION_DOCUMENTS {
+  * id : uuid <<PK>>
+  --
+  application_id : uuid <<FK>>
+  doc_type : string ' KTP | KK | SLIP_GAJI | NPWP | LAINNYA
+  file_url : string
+  status : string ' UPLOADED | VERIFIED | REJECTED
+  verified_by_user_id : uuid <<FK>>
+  verified_at : datetime
+  created_at : datetime
+}
+
+entity "SCORING_CHECKS" as SCORING_CHECKS {
+  * id : uuid <<PK>>
+  --
+  application_id : uuid <<FK>>
+  check_type : string ' SLIK_OJK | DUPLICATE_DATA | DSR
+  result : string ' PASS | FAIL | NEED_REVIEW
+  score_value : decimal
+  notes : string
+  checked_at : datetime
+}
+
+entity "APPROVALS" as APPROVALS {
+  * id : uuid <<PK>>
+  --
+  application_id : uuid <<FK>>
+  stage : string ' PRE_APPROVAL | FINAL_APPROVAL
+  decision : string ' APPROVE | REJECT | NEED_MORE
+  notes : string
+  decided_by_user_id : uuid <<FK>>
+  decided_at : datetime
+}
+
+entity "SURVEYS" as SURVEYS {
+  * id : uuid <<PK>>
+  --
+  application_id : uuid <<FK>>
+  scheduled_at : datetime
+  visited_at : datetime
+  result : string ' OK | NOT_OK | NEED_MORE
+  notes : string
+  surveyor_name : string
+  created_at : datetime
+}
+
+entity "CONTRACTS" as CONTRACTS {
+  * id : uuid <<PK>>
+  --
+  order_unit_id : uuid <<FK,UK>>
+  customer_id : uuid <<FK>>
+  dealer_id : uuid <<FK>>
+  lessor_user_id : uuid <<FK>>
+  signed_at : datetime
+  contract_no : string
+  contract_file_url : string
+  insurance_policy_no : string
+  insurance_file_url : string
+  created_at : datetime
+  updated_at : datetime
+}
+
+entity "PAYMENTS" as PAYMENTS {
+  * id : uuid <<PK>>
+  --
+  order_unit_id : uuid <<FK>>
+  payer_user_id : uuid <<FK>>
+  payment_type : string ' DP | ADMIN | INSURANCE
+  amount : decimal
+  method : string ' CASH | TRANSFER | VA | QRIS
+  status : string ' PENDING | PAID | FAILED | REFUNDED
+  reference_no : string
+  paid_at : datetime
+  created_at : datetime
+}
+
+entity "PURCHASE_ORDERS" as PURCHASE_ORDERS {
+  * id : uuid <<PK>>
+  --
+  order_unit_id : uuid <<FK,UK>>
+  dealer_id : uuid <<FK>>
+  lessor_user_id : uuid <<FK>>
+  po_no : string
+  status : string ' ISSUED | CONFIRMED | CANCELED
+  issued_at : datetime
+  confirmed_at : datetime
+}
+
+entity "STOCK_FULFILLMENT" as STOCK_FULFILLMENT {
+  * id : uuid <<PK>>
+  --
+  order_unit_id : uuid <<FK,UK>>
+  stock_status : string ' READY | INDENT
+  atpm_order_no : string
+  indent_weeks_min : int
+  indent_weeks_max : int
+  ready_at : datetime
+  created_at : datetime
+}
+
+entity "DELIVERIES" as DELIVERIES {
+  * id : uuid <<PK>>
+  --
+  order_unit_id : uuid <<FK>>
+  scheduled_at : datetime
+  shipped_at : datetime
+  delivered_at : datetime
+  status : string ' SCHEDULED | SHIPPED | DELIVERED | FAILED
+  receiver_name : string
+  receiver_phone : string
+  address_text : string
+  latitude : decimal
+  longitude : decimal
+  updated_by_user_id : uuid <<FK>>
+  updated_at : datetime
+}
+
+entity "DELIVERY_EVIDENCE" as DELIVERY_EVIDENCE {
+  * id : uuid <<PK>>
+  --
+  delivery_id : uuid <<FK>>
+  evidence_type : string ' PHOTO | SIGNATURE | OTHER
+  file_url : string
+  uploaded_by_user_id : uuid <<FK>>
+  uploaded_at : datetime
+}
+
+entity "DOCUMENT_HANDOVERS" as DOCUMENT_HANDOVERS {
+  * id : uuid <<PK>>
+  --
+  order_unit_id : uuid <<FK>>
+  doc_type : string ' STNK_TEMP | STNK | BPKB
+  status : string ' PENDING | HANDED_OVER
+  handed_over_at : datetime
+  notes : string
+  handed_over_by_user_id : uuid <<FK>>
+}
+
+entity "ORDER_STATUS_HISTORY" as ORDER_STATUS_HISTORY {
+  * id : uuid <<PK>>
+  --
+  order_id : uuid <<FK>>
+  from_status : string
+  to_status : string
+  notes : string
+  changed_by_user_id : uuid <<FK>>
+  changed_at : datetime
+}
+
+entity "ORDER_UNIT_STATUS_HISTORY" as ORDER_UNIT_STATUS_HISTORY {
+  * id : uuid <<PK>>
+  --
+  order_unit_id : uuid <<FK>>
+  from_status : string
+  to_status : string
+  notes : string
+  changed_by_user_id : uuid <<FK>>
+  changed_at : datetime
+}
+
+' =========================
+' RELATIONSHIPS (crow's foot-ish)
+' =========================
+
+USERS ||--|| USER_CREDENTIALS : has
+
+MOTOR_CATEGORIES ||--o{ MOTOR_MODELS : groups
+MOTOR_MODELS     ||--o{ MOTOR_VARIANTS : has
+
+MOTOR_VARIANTS   ||--o{ VARIANT_FEATURES : maps
+MOTOR_FEATURES   ||--o{ VARIANT_FEATURES : maps
+
+MOTOR_MODELS     ||--o{ MODEL_IMAGES : gallery
+MOTOR_VARIANTS   ||--o{ VARIANT_IMAGES : gallery
+
+PROMOTIONS       ||--o{ PROMOTION_VARIANTS : eligible
+MOTOR_VARIANTS   ||--o{ PROMOTION_VARIANTS : eligible
+
+PROMOTIONS       ||--o{ PROMOTION_DEALERS : eligible
+DEALERS          ||--o{ PROMOTION_DEALERS : eligible
+
+USERS            ||--o{ ORDERS : places_customer
+DEALERS          ||--o{ ORDERS : handles_dealer
+USERS            ||--o{ ORDERS : finances_lessor
+
+ORDERS           ||--o{ ORDER_ITEMS : contains
+MOTOR_VARIANTS   ||--o{ ORDER_ITEMS : ordered
+ORDER_ITEMS      ||--|{ ORDER_UNITS : expands_to_units
+
+ORDER_ITEMS      ||--o{ ORDER_PROMOTIONS : uses
+PROMOTIONS       ||--o{ ORDER_PROMOTIONS : applied
+
+ORDER_ITEMS      ||--o{ CREDIT_SIMULATIONS : simulates
+
+ORDER_UNITS      ||--o| LEASING_APPLICATIONS : becomes
+USERS            ||--o{ LEASING_APPLICATIONS : applies_customer
+USERS            ||--o{ LEASING_APPLICATIONS : reviews_lessor
+
+LEASING_APPLICATIONS ||--o{ APPLICATION_DOCUMENTS : uploads
+USERS                ||--o{ APPLICATION_DOCUMENTS : verifies
+LEASING_APPLICATIONS ||--o{ SCORING_CHECKS : checked
+LEASING_APPLICATIONS ||--o{ APPROVALS : decided
+USERS                ||--o{ APPROVALS : decides
+LEASING_APPLICATIONS ||--o{ SURVEYS : surveyed
+
+ORDER_UNITS      ||--o| CONTRACTS : signed
+USERS            ||--o{ CONTRACTS : signed_by_customer
+DEALERS          ||--o{ CONTRACTS : provided_by_dealer
+USERS            ||--o{ CONTRACTS : signed_by_lessor
+
+ORDER_UNITS      ||--o{ PAYMENTS : paid
+USERS            ||--o{ PAYMENTS : pays
+
+ORDER_UNITS      ||--o| PURCHASE_ORDERS : PO
+DEALERS          ||--o{ PURCHASE_ORDERS : receives
+USERS            ||--o{ PURCHASE_ORDERS : issues
+
+ORDER_UNITS      ||--o| STOCK_FULFILLMENT : stock_indent
+
+ORDER_UNITS      ||--o{ DELIVERIES : delivered
+USERS            ||--o{ DELIVERIES : updates
+DELIVERIES       ||--o{ DELIVERY_EVIDENCE : evidence
+USERS            ||--o{ DELIVERY_EVIDENCE : uploads
+
+ORDER_UNITS      ||--o{ DOCUMENT_HANDOVERS : documents
+USERS            ||--o{ DOCUMENT_HANDOVERS : hands_over
+
+ORDERS           ||--o{ ORDER_STATUS_HISTORY : history
+USERS            ||--o{ ORDER_STATUS_HISTORY : changes
+
+ORDER_UNITS      ||--o{ ORDER_UNIT_STATUS_HISTORY : history
+USERS            ||--o{ ORDER_UNIT_STATUS_HISTORY : changes
+
+@enduml
